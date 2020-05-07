@@ -1,0 +1,31 @@
+{
+  "name": "contentful-unsplash-app",
+  "license": "UNLICENSED",
+  "version": "1.0.0",
+  "description": "Generate image placeholders with Unsplash in Contentful",
+  "engines": {
+    "node": "10.x"
+  },
+  "scripts": {
+    "start": "webpack && node server.js"
+  },
+  "dependencies": {
+    "express": "4.17.1",
+    "webpack": "4.41.0",
+    "webpack-cli": "3.3.9",
+    "style-loader": "1.0.0",
+    "css-loader": "3.2.0",
+    "babel-loader": "8.0.5",
+    "@babel/core": "7.6.0",
+    "@babel/preset-env": "7.6.2",
+    "@babel/preset-react": "7.0.0",
+    "@babel/plugin-transform-runtime": "7.6.0",
+    "@babel/runtime": "7.5.4",
+    "react": "16.10.1",
+    "react-dom": "16.10.1",
+    "contentful-ui-extensions-sdk": "3.10.6",
+    "@contentful/forma-36-react-components": "3.15.9",
+    "@contentful/forma-36-fcss": "0.0.31",
+    "@contentful/forma-36-tokens": "0.4.5"
+  }
+}
