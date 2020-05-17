@@ -97,8 +97,6 @@ function SJMarkdown({ sdk }) {
     setWasCopied(true);
   }
 
-  console.log(languageErrors);
-
   return (
     <div>
       <div>

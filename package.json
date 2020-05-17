@@ -10,6 +10,7 @@
   "keywords": [],
   "author": "stefan judis <stefanjudis@gmail.com>",
   "license": "MIT",
+  "browserslist": "> 5%",
   "dependencies": {
     "alex": "^8.1.1",
     "lodash.debounce": "^4.0.8",
