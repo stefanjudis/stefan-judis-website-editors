@@ -5,7 +5,10 @@ import debounce from 'lodash.debounce';
 import showdown from 'showdown';
 import alex from 'alex';
 import { init, locations } from 'contentful-ui-extensions-sdk';
-import { MarkdownEditor } from '@contentful/field-editor-markdown';
+import {
+  MarkdownEditor,
+  renderMarkdownDialog,
+} from '@contentful/field-editor-markdown';
 import '@contentful/forma-36-react-components/dist/styles.css';
 import '@contentful/forma-36-fcss/dist/styles.css';
 import {
@@ -28,6 +31,10 @@ init((sdk) => {
 
   if (sdk.location.is(locations.LOCATION_ENTRY_FIELD)) {
     Component = SJMarkdown;
+  }
+
+  if (sdk.location.is(locations.LOCATION_DIALOG)) {
+    Component = renderMarkdownDialog(sdk);
   }
 
   render(<Component sdk={sdk} />, document.getElementById('root'));
@@ -81,8 +88,6 @@ function SJMarkdown({ sdk }) {
       }, 1000)();
     });
   }, []);
-
-  console.log(languageErrors);
 
   function copyToClipboard() {
     const previewText = markdownConverter.makeHtml(sdk.field.getValue());
