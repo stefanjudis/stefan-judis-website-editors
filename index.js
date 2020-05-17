@@ -82,6 +82,8 @@ function SJMarkdown({ sdk }) {
     });
   }, []);
 
+  console.log(languageErrors);
+
   function copyToClipboard() {
     const previewText = markdownConverter.makeHtml(sdk.field.getValue());
 
@@ -109,9 +111,11 @@ function SJMarkdown({ sdk }) {
               noteType="warning"
             >
               {showErrors ? (
-                <List style={{ marginTop: '1em' }}>
-                  {languageErrors.map(({ message, name }) => (
-                    <ListItem key={name}>{message}</ListItem>
+                <List style={{ marginTop: '1em', paddingLeft: '0' }}>
+                  {languageErrors.map(({ line, message, name }) => (
+                    <ListItem key={name}>
+                      <strong>Line: {line}</strong>: {message}
+                    </ListItem>
                   ))}
                 </List>
               ) : (
@@ -155,7 +159,9 @@ function SJMarkdown({ sdk }) {
           </Button>
         </div>
       </div>
-      <MarkdownEditor sdk={sdk} />
+      <div className={showErrors ? 'show-line-numbers' : ''}>
+        <MarkdownEditor sdk={sdk} />
+      </div>
     </div>
   );
 }

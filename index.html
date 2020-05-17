@@ -15,6 +15,25 @@
     summary::-webkit-details-marker {
       display: none;
     }
+
+    .show-line-numbers .CodeMirror-lines {
+      counter-reset: markdownLine;
+    }
+
+    .show-line-numbers .CodeMirror-line {
+      position: relative;
+      padding-left: 1.5em !important;
+    }
+
+    .show-line-numbers .CodeMirror-line::before {
+      position: absolute;
+      top: 50%;
+      left: -.5em;
+      transform: translateY(-50%);
+      counter-increment: markdownLine;
+      content: counter(markdownLine);
+      color: #aaa;
+    }
   </style>
   <body>
     <div id="root"></div>
