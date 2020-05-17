@@ -10,6 +10,9 @@
   "keywords": [],
   "author": "stefan judis <stefanjudis@gmail.com>",
   "license": "MIT",
+  "browserslist": [
+    "last 3 Chrome versions"
+  ],
   "dependencies": {
     "alex": "^8.1.1",
     "lodash.debounce": "^4.0.8",
