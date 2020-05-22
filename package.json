@@ -12,6 +12,7 @@
   "license": "MIT",
   "browserslist": "> 5%",
   "dependencies": {
+    "@contentful/field-editor-reference": "^0.9.0",
     "alex": "^8.1.1",
     "lodash.debounce": "^4.0.8",
     "react": "^16.13.1",

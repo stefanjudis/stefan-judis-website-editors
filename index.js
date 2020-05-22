@@ -9,36 +9,46 @@ import {
   MarkdownEditor,
   renderMarkdownDialog,
 } from '@contentful/field-editor-markdown';
+import {
+  SingleMediaEditor,
+  SingleEntryReferenceEditor,
+} from '@contentful/field-editor-reference';
 import '@contentful/forma-36-react-components/dist/styles.css';
 import '@contentful/forma-36-fcss/dist/styles.css';
 import {
   Button,
-  Note,
   List,
   ListItem,
+  Note,
+  Pill,
+  Spinner,
 } from '@contentful/forma-36-react-components';
 
 const DEFAULT_ANIMAL = 'cat';
 
 const markdownConverter = new showdown.Converter();
+const ROOT = document.getElementById('root');
 
 init((sdk) => {
   let Component;
 
   if (sdk.location.is(locations.LOCATION_APP_CONFIG)) {
-    Component = Config;
+    return render(<Config sdk={sdk} />, ROOT);
   }
 
   if (sdk.location.is(locations.LOCATION_ENTRY_FIELD)) {
-    Component = SJMarkdown;
+    sdk.window.startAutoResizer();
+
+    if (sdk.field.type === 'Text') {
+      return render(<SJMarkdown sdk={sdk} />, ROOT);
+    } else if (sdk.field.type === 'Link') {
+      return render(<LinkPreview sdk={sdk} />, ROOT);
+    }
   }
 
   if (sdk.location.is(locations.LOCATION_DIALOG)) {
     Component = renderMarkdownDialog(sdk);
   }
-
-  render(<Component sdk={sdk} />, document.getElementById('root'));
-  sdk.window.startAutoResizer();
 });
 
 class Config extends Component {
@@ -168,5 +178,102 @@ function SJMarkdown({ sdk }) {
         <MarkdownEditor sdk={sdk} />
       </div>
     </div>
+  );
+}
+
+function LinkPreview({ sdk }) {
+  const isVideo = !!sdk.field.validations.find((validation) => {
+    return validation?.linkMimetypeGroup.includes('video');
+  });
+
+  if (isVideo) {
+    return <SJSingleMediaEditor sdk={sdk} />;
+  } else {
+    return <SingleEntryReferenceEditor sdk={sdk} />;
+  }
+}
+
+function SJSingleMediaEditor({ sdk }) {
+  const [value, setValue] = useState(null);
+  const [asset, setAsset] = useState(null);
+
+  useEffect(() => {
+    console.log('mounted', sdk.field.id);
+    sdk.field.onValueChanged((value) => {
+      if (value) {
+        setValue(value);
+        sdk.space.getAsset(value.sys.id).then((asset) => {
+          setAsset(asset);
+        });
+      } else {
+        setValue(null);
+      }
+    });
+  }, []);
+
+  if (!value) {
+    return (
+      <SingleMediaEditor
+        sdk={sdk}
+        parameters={{
+          instance: {
+            canCreateEntity: true,
+            canLinkEntity: true,
+          },
+        }}
+      />
+    );
+  }
+
+  if (!asset) {
+    return <Spinner />;
+  }
+
+  const file = asset.fields.file[sdk.field.locale];
+  const { contentType } = file;
+  const isVideo = contentType === 'video/mp4' || contentType === 'video/webm';
+
+  return isVideo ? (
+    <div>
+      <div style={{ display: 'flex', marginBottom: '0.5em' }}>
+        <Pill label={contentType} />
+        <Button
+          size="small"
+          buttonType="primary"
+          onClick={() =>
+            sdk.navigator.openAsset(asset.sys.id, { slideIn: true })
+          }
+          style={{
+            marginLeft: 'auto',
+          }}
+        >
+          Edit video
+        </Button>
+        <Button
+          size="small"
+          buttonType="warning"
+          onClick={() => sdk.field.setValue(null)}
+          style={{
+            marginLeft: '0.5em',
+          }}
+        >
+          Remove video
+        </Button>
+      </div>
+      <video controls style={{ width: '100%' }}>
+        <source src={file.url} type="video/mp4" />
+        Sorry, your browser doesn't support embedded videos.
+      </video>
+    </div>
+  ) : (
+    <SingleMediaEditor
+      sdk={sdk}
+      parameters={{
+        instance: {
+          canCreateEntity: true,
+          canLinkEntity: true,
+        },
+      }}
+    />
   );
 }
