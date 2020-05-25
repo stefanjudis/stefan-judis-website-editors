@@ -4,6 +4,8 @@ This App is built with [the Contentful App Framework](https://www.contentful.com
 
 **Feel free to use and/or fork it for your Contentful App.**
 
+❗If you have ideas or wishes for custom Contentful components, [please file an issue](https://github.com/stefanjudis/stefan-judis-website-editors/issues/new) and let me know about them. :)
+
 ## An enriched markdown editor
 
 ![Custom markdown editor with Alex.js validation and a copy button](./images/markdown.png)
