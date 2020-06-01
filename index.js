@@ -6,6 +6,12 @@ import SJSingleMediaEditor from './components/single-media-editor.js';
 import { init, locations } from 'contentful-ui-extensions-sdk';
 import { renderMarkdownDialog } from '@contentful/field-editor-markdown';
 import { SingleEntryReferenceEditor } from '@contentful/field-editor-reference';
+import {
+  Card,
+  CheckboxField,
+  Pill,
+  TextField,
+} from '@contentful/forma-36-react-components';
 import '@contentful/forma-36-react-components/dist/styles.css';
 import '@contentful/forma-36-fcss/dist/styles.css';
 
@@ -26,6 +32,10 @@ init((sdk) => {
     }
   }
 
+  if (sdk.location.is(locations.LOCATION_PAGE)) {
+    return render(<div>hello world</div>, ROOT);
+  }
+
   if (sdk.location.is(locations.LOCATION_DIALOG)) {
     Component = renderMarkdownDialog(sdk);
   }
@@ -34,24 +44,203 @@ init((sdk) => {
 class Config extends Component {
   constructor(props) {
     super(props);
-    this.state = { parameters: {} };
+    this.state = {
+      parameters: { forbiddenWords: [] },
+      contentTypes: [],
+      selectedAppFields: [],
+      validFieldsForMarkdownValidation: [],
+    };
     this.app = this.props.sdk.app;
     this.app.onConfigure(() => this.onConfigure());
+    this.space = this.props.sdk.space;
+    this.appId = this.props.sdk.ids.app;
+
+    this.handleForbiddenWordsChange = this.handleForbiddenWordsChange.bind(
+      this
+    );
   }
 
   async componentDidMount() {
-    const parameters = await this.app.getParameters();
-    this.setState({ parameters: parameters || {} }, () => this.app.setReady());
+    const [contentTypes, editorInterfaces, parameters] = await Promise.all([
+      this.space.getContentTypes(),
+      this.space.getEditorInterfaces(),
+      this.app.getParameters(),
+    ]);
+
+    this.setState(
+      {
+        ...this.state,
+        ...{
+          parameters: { ...this.state.parameters, ...parameters },
+          contentTypes: contentTypes.items,
+          validFieldsForMarkdownValidation: this.getAllFieldsOfType(
+            contentTypes.items,
+            { fieldType: 'Text' }
+          ),
+          selectedAppFields: this.getSelectedAppFields(editorInterfaces.items),
+        },
+      },
+      () => this.app.setReady()
+    );
+  }
+
+  getSelectedAppFields(editorInterfaces) {
+    return editorInterfaces.reduce((acc, editorInterface) => {
+      return [
+        ...acc,
+        ...editorInterface.controls
+          .filter(
+            ({ widgetNamespace, widgetId }) =>
+              widgetNamespace === 'app' && widgetId === this.appId
+          )
+          .map((control) => ({
+            contentTypeId: editorInterface.sys.contentType.sys.id,
+            ...control,
+          })),
+      ];
+    }, []);
+  }
+
+  getAllFieldsOfType(contentTypes, { fieldType }) {
+    return contentTypes.reduce((acc, contentType) => {
+      return contentType.fields.reduce((acc, field) => {
+        if (field.type === fieldType) {
+          acc.push({ contentType, ...field });
+        }
+
+        return acc;
+      }, acc);
+    }, []);
+  }
+
+  handleForbiddenWordsChange({ target }) {
+    this.setState({
+      ...this.state,
+      ...{
+        parameters: {
+          forbiddenWords: target.value
+            .split(',')
+            .map((word) => word.trim())
+            .filter((word) => !!word.length),
+        },
+      },
+    });
+  }
+
+  isSelectedAppField(field) {
+    // console.log(field);
+    return this.state.selectedAppFields.some(
+      (selectedField) =>
+        selectedField.fieldId === field.id &&
+        field.contentType.sys.id === selectedField.contentTypeId
+    );
+  }
+
+  handleFieldSelectionChange(field, { isSelected }) {
+    const selectedAppFields = isSelected
+      ? [
+          ...this.state.selectedAppFields,
+          {
+            contentTypeId: field.contentType.sys.id,
+            fieldId: field.id,
+            widgetId: this.appId,
+            widgetNamespace: 'app',
+          },
+        ]
+      : this.state.selectedAppFields.filter(
+          (selectedField) =>
+            selectedField.fieldId !== field.id ||
+            selectedField.contentTypeId !== field.contentType.sys.id
+        );
+
+    this.setState({
+      ...this.state,
+      selectedAppFields,
+    });
   }
 
   render() {
-    return <p>nothing to do here yet. :)</p>;
+    const { parameters, validFieldsForMarkdownValidation } = this.state;
+
+    return (
+      <div style={{ maxWidth: '600px', margin: '0 auto', padding: '1em' }}>
+        <h1 className="h-1">Define forbidden words</h1>
+        <TextField
+          className=""
+          countCharacters={false}
+          helpText="Define a list of comma-separated words that should not appear in your copy"
+          id="emailInput"
+          labelText="List of forbidden words"
+          name="forbiddenWords"
+          onBlur={this.handleForbiddenWordsChange}
+          onChange={this.handleForbiddenWordsChange}
+          required={false}
+          textInputProps={{
+            disabled: false,
+            placeholder: 'easy, easily, just, ...',
+            type: 'text',
+          }}
+          textarea={true}
+          value={parameters.forbiddenWords.join(',')}
+          validationMessage=""
+          width="full"
+        />
+        <ul className="u-list-reset">
+          {parameters.forbiddenWords.map((word, index) => (
+            <li
+              key={index}
+              style={{ display: 'inline-block', marginRight: '0.25em' }}
+            >
+              <Pill className="" label={word} />
+            </li>
+          ))}
+        </ul>
+        <h2 className="h-2">
+          Can be applied to the following content type fields
+        </h2>
+        <ul className="u-list-reset">
+          {validFieldsForMarkdownValidation.map((field) => (
+            <li key={`${field.id}-${field.contentType.sys.id}`}>
+              <CheckboxField
+                labelText={`${field.name} in ${field.contentType.name}`}
+                name={`${field.name}-${field.contentType.sys.id}`}
+                checked={this.isSelectedAppField(field)}
+                disabled={field.type !== 'Text'}
+                onChange={(e) =>
+                  this.handleFieldSelectionChange(field, {
+                    isSelected: !this.isSelectedAppField(field),
+                  })
+                }
+                id={`${field.name}-${field.contentType.sys.id}`}
+              />
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
   }
 
   async onConfigure() {
+    const EditorInterface = this.state.selectedAppFields.reduce(
+      (acc, { contentTypeId, fieldId }) => {
+        if (!acc[contentTypeId]) {
+          acc[contentTypeId] = { controls: [] };
+        }
+
+        acc[contentTypeId].controls.push({ fieldId });
+
+        return acc;
+      },
+      {}
+    );
+
+    console.log(this.state.parameters);
+
     return {
       parameters: this.state.parameters,
-      targetState: {},
+      targetState: {
+        EditorInterface,
+      },
     };
   }
 }
