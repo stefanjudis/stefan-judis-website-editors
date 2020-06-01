@@ -168,7 +168,7 @@ function SJMarkdown({ sdk }) {
             options={{
               logo: forbiddenWordsLogo,
               type: 'forbidden-words',
-              noWarningsTitle: "You're not using forbidden words!",
+              noWarningsTitle: "You're not using any forbidden words",
               warningsTitle: "You're using forbidden words",
               renderWarning: (warning) => warning,
             }}
