@@ -13,7 +13,8 @@
   "browserslist": "> 5%",
   "dependencies": {
     "@contentful/field-editor-markdown": "^0.7.1",
-    "@contentful/field-editor-reference": "^0.9.0",
+    "@contentful/field-editor-reference": "^0.9.6",
+    "@contentful/field-editor-rich-text": "^0.10.6",
     "@contentful/forma-36-fcss": "0.0.35",
     "@contentful/forma-36-react-components": "3.37.3",
     "@contentful/forma-36-tokens": "0.5.2",

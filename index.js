@@ -2,14 +2,16 @@ import React, { Component } from 'react';
 import { render } from 'react-dom';
 
 import SJMarkdown from './components/markdown.js';
+import SJRichtext from './components/richtext.js';
 import SJSingleMediaEditor from './components/single-media-editor.js';
 import { init, locations } from 'contentful-ui-extensions-sdk';
 import { renderMarkdownDialog } from '@contentful/field-editor-markdown';
 import { SingleEntryReferenceEditor } from '@contentful/field-editor-reference';
 import {
-  Card,
   CheckboxField,
+  Heading,
   Pill,
+  SectionHeading,
   TextField,
 } from '@contentful/forma-36-react-components';
 import '@contentful/forma-36-react-components/dist/styles.css';
@@ -27,6 +29,8 @@ init((sdk) => {
 
     if (sdk.field.type === 'Text') {
       return render(<SJMarkdown sdk={sdk} />, ROOT);
+    } else if (sdk.field.type === 'RichText') {
+      return render(<SJRichtext sdk={sdk} />, ROOT);
     } else if (sdk.field.type === 'Link') {
       return render(<LinkPreview sdk={sdk} />, ROOT);
     }
@@ -75,7 +79,7 @@ class Config extends Component {
           contentTypes: contentTypes.items,
           validFieldsForMarkdownValidation: this.getAllFieldsOfType(
             contentTypes.items,
-            { fieldType: 'Text' }
+            { fieldTypes: ['Text', 'RichText'] }
           ),
           selectedAppFields: this.getSelectedAppFields(editorInterfaces.items),
         },
@@ -101,10 +105,10 @@ class Config extends Component {
     }, []);
   }
 
-  getAllFieldsOfType(contentTypes, { fieldType }) {
+  getAllFieldsOfType(contentTypes, { fieldTypes }) {
     return contentTypes.reduce((acc, contentType) => {
       return contentType.fields.reduce((acc, field) => {
-        if (field.type === fieldType) {
+        if (fieldTypes.includes(field.type)) {
           acc.push({ contentType, ...field });
         }
 
@@ -164,13 +168,15 @@ class Config extends Component {
 
     return (
       <div style={{ maxWidth: '600px', margin: '0 auto', padding: '1em' }}>
-        <h1 className="h-1">Define forbidden words</h1>
+        <Heading className="h-1" element="h1">
+          Forbidden words
+        </Heading>
         <TextField
           className=""
           countCharacters={false}
           helpText="Define a list of comma-separated words that should not appear in your copy"
           id="emailInput"
-          labelText="List of forbidden words"
+          labelText="List of words"
           name="forbiddenWords"
           onBlur={this.handleForbiddenWordsChange}
           onChange={this.handleForbiddenWordsChange}
@@ -195,17 +201,17 @@ class Config extends Component {
             </li>
           ))}
         </ul>
-        <h2 className="h-2">
+        <SectionHeading className="h-2" element="h2">
           Can be applied to the following content type fields
-        </h2>
+        </SectionHeading>
         <ul className="u-list-reset">
           {validFieldsForMarkdownValidation.map((field) => (
             <li key={`${field.id}-${field.contentType.sys.id}`}>
               <CheckboxField
-                labelText={`${field.name} in ${field.contentType.name}`}
+                labelText={`${field.name} in ${field.contentType.name} (${field.type})`}
                 name={`${field.name}-${field.contentType.sys.id}`}
                 checked={this.isSelectedAppField(field)}
-                disabled={field.type !== 'Text'}
+                disabled={field.type !== 'Text' && field.type !== 'RichText'}
                 onChange={(e) =>
                   this.handleFieldSelectionChange(field, {
                     isSelected: !this.isSelectedAppField(field),
@@ -233,8 +239,6 @@ class Config extends Component {
       },
       {}
     );
-
-    console.log(this.state.parameters);
 
     return {
       parameters: this.state.parameters,
