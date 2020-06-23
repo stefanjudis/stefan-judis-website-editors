@@ -1,9 +1,13 @@
 import React, { Component } from 'react';
 import { render } from 'react-dom';
 
-import SJMarkdown from './components/markdown.js';
-import SJRichtext from './components/richtext.js';
-import SJSingleMediaEditor from './components/single-media-editor.js';
+import SJMarkdown from './components/field-editors/markdown.js';
+import SJRichtext from './components/field-editors/richtext.js';
+import SJSingleMediaEditor from './components/field-editors/single-media-editor.js';
+import LongTextConfig from './components/config/long-text-config';
+import VideoPreviewConfig from './components/config/video-preview-config';
+import FieldSelect from './components/config/field-select';
+
 import { init, locations } from 'contentful-ui-extensions-sdk';
 import { renderMarkdownDialog } from '@contentful/field-editor-markdown';
 import { SingleEntryReferenceEditor } from '@contentful/field-editor-reference';
@@ -12,6 +16,9 @@ import {
   Heading,
   Pill,
   SectionHeading,
+  Tabs,
+  Tab,
+  TabPanel,
   TextField,
 } from '@contentful/forma-36-react-components';
 import '@contentful/forma-36-react-components/dist/styles.css';
@@ -53,15 +60,29 @@ class Config extends Component {
       contentTypes: [],
       selectedAppFields: [],
       validFieldsForMarkdownValidation: [],
+      currentTabId: 'long',
     };
     this.app = this.props.sdk.app;
     this.app.onConfigure(() => this.onConfigure());
     this.space = this.props.sdk.space;
     this.appId = this.props.sdk.ids.app;
 
-    this.handleForbiddenWordsChange = this.handleForbiddenWordsChange.bind(
-      this
-    );
+    this.TABS_CONFIG = [
+      {
+        fieldTypes: ['Text', 'RichText'],
+        id: 'long',
+        label: 'Enriched long text / rich text',
+        Component: LongTextConfig,
+      },
+      {
+        fieldTypes: ['Link'],
+        id: 'video-preview',
+        label: 'Inline video preview',
+        Component: VideoPreviewConfig,
+      },
+    ];
+
+    this.setParameter = this.setParameter.bind(this);
   }
 
   async componentDidMount() {
@@ -77,10 +98,6 @@ class Config extends Component {
         ...{
           parameters: { ...this.state.parameters, ...parameters },
           contentTypes: contentTypes.items,
-          validFieldsForMarkdownValidation: this.getAllFieldsOfType(
-            contentTypes.items,
-            { fieldTypes: ['Text', 'RichText'] }
-          ),
           selectedAppFields: this.getSelectedAppFields(editorInterfaces.items),
         },
       },
@@ -105,39 +122,13 @@ class Config extends Component {
     }, []);
   }
 
-  getAllFieldsOfType(contentTypes, { fieldTypes }) {
-    return contentTypes.reduce((acc, contentType) => {
-      return contentType.fields.reduce((acc, field) => {
-        if (fieldTypes.includes(field.type)) {
-          acc.push({ contentType, ...field });
-        }
+  setParameter(key, value) {
+    const parameters = { ...this.state.parameters, [key]: value };
 
-        return acc;
-      }, acc);
-    }, []);
-  }
-
-  handleForbiddenWordsChange({ target }) {
     this.setState({
       ...this.state,
-      ...{
-        parameters: {
-          forbiddenWords: target.value
-            .split(',')
-            .map((word) => word.trim())
-            .filter((word) => !!word.length),
-        },
-      },
+      ...{ parameters },
     });
-  }
-
-  isSelectedAppField(field) {
-    // console.log(field);
-    return this.state.selectedAppFields.some(
-      (selectedField) =>
-        selectedField.fieldId === field.id &&
-        field.contentType.sys.id === selectedField.contentTypeId
-    );
   }
 
   handleFieldSelectionChange(field, { isSelected }) {
@@ -164,64 +155,48 @@ class Config extends Component {
   }
 
   render() {
-    const { parameters, validFieldsForMarkdownValidation } = this.state;
+    const getFieldSelect = ({ fieldTypes }) => {
+      return (
+        <FieldSelect
+          contentTypes={this.state.contentTypes}
+          fieldTypes={fieldTypes}
+          selectedAppFields={this.state.selectedAppFields}
+          onFieldChange={(field, options) =>
+            this.handleFieldSelectionChange(field, options)
+          }
+        />
+      );
+    };
 
     return (
-      <div style={{ maxWidth: '600px', margin: '0 auto', padding: '1em' }}>
-        <Heading className="h-1" element="h1">
-          Forbidden words
-        </Heading>
-        <TextField
-          className=""
-          countCharacters={false}
-          helpText="Define a list of comma-separated words that should not appear in your copy"
-          id="emailInput"
-          labelText="List of words"
-          name="forbiddenWords"
-          onBlur={this.handleForbiddenWordsChange}
-          onChange={this.handleForbiddenWordsChange}
-          required={false}
-          textInputProps={{
-            disabled: false,
-            placeholder: 'easy, easily, just, ...',
-            type: 'text',
-          }}
-          textarea={true}
-          value={parameters.forbiddenWords.join(',')}
-          validationMessage=""
-          width="full"
-        />
-        <ul className="u-list-reset">
-          {parameters.forbiddenWords.map((word, index) => (
-            <li
-              key={index}
-              style={{ display: 'inline-block', marginRight: '0.25em' }}
+      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '1em' }}>
+        <Heading element="h1">Custom field editors</Heading>
+        <Tabs withDivider>
+          {this.TABS_CONFIG.map(({ id, label }) => (
+            <Tab
+              id={id}
+              key={id}
+              selected={this.state.currentTabId === id}
+              onSelect={(id) => this.setState({ currentTabId: id })}
             >
-              <Pill className="" label={word} />
-            </li>
+              {label}
+            </Tab>
           ))}
-        </ul>
-        <SectionHeading className="h-2" element="h2">
-          Can be applied to the following content type fields
-        </SectionHeading>
-        <ul className="u-list-reset">
-          {validFieldsForMarkdownValidation.map((field) => (
-            <li key={`${field.id}-${field.contentType.sys.id}`}>
-              <CheckboxField
-                labelText={`${field.name} in ${field.contentType.name} (${field.type})`}
-                name={`${field.name}-${field.contentType.sys.id}`}
-                checked={this.isSelectedAppField(field)}
-                disabled={field.type !== 'Text' && field.type !== 'RichText'}
-                onChange={(e) =>
-                  this.handleFieldSelectionChange(field, {
-                    isSelected: !this.isSelectedAppField(field),
-                  })
-                }
-                id={`${field.name}-${field.contentType.sys.id}`}
-              />
-            </li>
-          ))}
-        </ul>
+        </Tabs>
+
+        {this.TABS_CONFIG.map(({ id, fieldTypes, Component }) => (
+          <TabPanel
+            id={id}
+            key={id}
+            hidden={this.state.currentTabId === id ? '' : 'hidden'}
+          >
+            <Component
+              parameters={this.state.parameters}
+              setParameter={this.setParameter}
+              FieldSelect={getFieldSelect({ fieldTypes })}
+            />
+          </TabPanel>
+        ))}
       </div>
     );
   }

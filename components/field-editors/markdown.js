@@ -11,8 +11,8 @@ import {
   ListItem,
   Switch,
 } from '@contentful/forma-36-react-components';
-import alexLogo from '../images/alex-logo.svg';
-import forbiddenWordsLogo from '../images/forbidden-words-logo.svg';
+import alexLogo from '../../images/alex-logo.svg';
+import forbiddenWordsLogo from '../../images/forbidden-words-logo.svg';
 
 const markdownConverter = new showdown.Converter();
 
