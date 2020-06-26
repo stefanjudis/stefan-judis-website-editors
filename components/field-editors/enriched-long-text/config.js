@@ -1,19 +1,17 @@
 import React from 'react';
-import {
-  Pill,
-  SectionHeading,
-  TextField,
-} from '@contentful/forma-36-react-components';
+import { Pill, TextField } from '@contentful/forma-36-react-components';
 
-function LongTextConfig({ FieldSelect, parameters, setParameter }) {
+function LongTextConfig({ FieldSelect, editor, setEditorParameter }) {
   const handleForbiddenWordsChange = ({ target }) => {
     const forbiddenWords = target.value
       .split(',')
       .map((word) => word.trim())
       .filter((word) => !!word.length);
 
-    setParameter('forbiddenWords', forbiddenWords);
+    setEditorParameter(editor, 'forbiddenWords', forbiddenWords);
   };
+
+  const { parameters } = editor;
 
   return (
     <>
@@ -47,12 +45,14 @@ function LongTextConfig({ FieldSelect, parameters, setParameter }) {
           </li>
         ))}
       </ul>
-      <SectionHeading className="h-2" element="h2">
-        Define the fields for this experience
-      </SectionHeading>
+
       {FieldSelect}
     </>
   );
 }
+
+export const LongTextConfigParameters = {
+  forbiddenWords: [],
+};
 
 export default LongTextConfig;

@@ -4,6 +4,7 @@ import 'codemirror/lib/codemirror.css';
 import showdown from 'showdown';
 import alex from 'alex';
 import { MarkdownEditor } from '@contentful/field-editor-markdown';
+import { RichTextEditor } from '@contentful/field-editor-rich-text';
 import {
   Button,
   Note,
@@ -11,14 +12,13 @@ import {
   ListItem,
   Switch,
 } from '@contentful/forma-36-react-components';
-import alexLogo from '../../images/alex-logo.svg';
-import forbiddenWordsLogo from '../../images/forbidden-words-logo.svg';
+import alexLogo from '../../../images/alex-logo.svg';
+import forbiddenWordsLogo from '../../../images/forbidden-words-logo.svg';
 
 const markdownConverter = new showdown.Converter();
 
 function WarningsBox({ warnings, options }) {
   const { logo, noWarningsTitle, warningsTitle, renderWarning, type } = options;
-
   const [showWarnings, setShowWarnings] = useState(false);
 
   return (
@@ -109,12 +109,12 @@ function copyToClipboard(value) {
   document.removeEventListener('copy', listener);
 }
 
-function SJMarkdown({ sdk }) {
+function SJMarkdown({ sdk, parameters }) {
   const [wasCopied, setWasCopied] = useState(false);
   const [alexWarnings, setAlexWarnings] = useState([]);
   const [forbiddenWordWarnings, setForbiddenWordWarnings] = useState([]);
 
-  const forbiddenWords = sdk.parameters.installation.forbiddenWords;
+  const forbiddenWords = parameters.forbiddenWords;
 
   useEffect(() => {
     sdk.field.onValueChanged((value) => {

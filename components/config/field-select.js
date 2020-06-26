@@ -1,20 +1,12 @@
 import React from 'react';
 import { CheckboxField } from '@contentful/forma-36-react-components';
 
-function getFieldsOfType(contentTypes, { fieldTypes, selectedAppFields }) {
-  const isSelected = (field) =>
-    selectedAppFields.some(
-      (selectedField) =>
-        selectedField.fieldId === field.id &&
-        field.contentType.sys.id === selectedField.contentTypeId
-    );
-
+function getFieldsOfType(contentTypes, { fieldTypes, activeAppFields }) {
   return contentTypes.reduce((acc, contentType) => {
     return contentType.fields.reduce((acc, field) => {
       if (fieldTypes.includes(field.type)) {
         acc.push({
           contentType,
-          isSelected: isSelected({ contentType, ...field }),
           ...field,
         });
       }
@@ -26,29 +18,40 @@ function getFieldsOfType(contentTypes, { fieldTypes, selectedAppFields }) {
 
 function FieldSelect({
   contentTypes,
+  editor,
   fieldTypes,
-  selectedAppFields,
+  activeAppFields,
   onFieldChange,
 }) {
   const fields = getFieldsOfType(contentTypes, {
     fieldTypes,
-    selectedAppFields,
+    activeAppFields,
   });
+
   return (
-    <ul>
-      {fields.map((field) => (
-        <li key={`${field.id}-${field.contentType.sys.id}`}>
-          <CheckboxField
-            labelText={`${field.name} in ${field.contentType.name} (${field.type})`}
-            name={`${field.name}-${field.contentType.sys.id}`}
-            checked={field.isSelected}
-            onChange={() =>
-              onFieldChange(field, { isSelected: !field.isSelected })
-            }
-            id={`${field.name}-${field.contentType.sys.id}`}
-          />
-        </li>
-      ))}
+    <ul className="u-list-reset">
+      {fields.map((field) => {
+        const checked = editor.connectedFields.some(
+          (cField) => cField === `${field.id}_⭐_${field.contentType.sys.id}`
+        );
+
+        return (
+          <li key={`${editor.id}-${field.id}-${field.contentType.sys.id}`}>
+            <CheckboxField
+              labelText={`${field.name} in ${field.contentType.name} (${field.type})`}
+              name={`${field.name}-${field.contentType.sys.id}`}
+              checked={checked}
+              onChange={() =>
+                onFieldChange(field, {
+                  editor,
+                  isSelected: !checked,
+                })
+              }
+              id={`${editor.id}-${field.id}-${field.contentType.sys.id}`}
+            />
+          </li>
+        );
+      })}
     </ul>
   );
 }
