@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-import { render } from 'react-dom';
+import { createRoot } from 'react-dom/client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import SJMarkdown from './components/field-editors/markdown.js';
 import SJRichtext from './components/field-editors/richtext.js';
@@ -8,47 +9,42 @@ import LongTextConfig from './components/config/long-text-config';
 import VideoPreviewConfig from './components/config/video-preview-config';
 import FieldSelect from './components/config/field-select';
 
-import { init, locations } from 'contentful-ui-extensions-sdk';
+import { init, locations } from '@contentful/app-sdk';
 import { renderMarkdownDialog } from '@contentful/field-editor-markdown';
 import { SingleEntryReferenceEditor } from '@contentful/field-editor-reference';
-import {
-  CheckboxField,
-  Heading,
-  Pill,
-  SectionHeading,
-  Tabs,
-  Tab,
-  TabPanel,
-  TextField,
-} from '@contentful/forma-36-react-components';
-import '@contentful/forma-36-react-components/dist/styles.css';
-import '@contentful/forma-36-fcss/dist/styles.css';
+import { Heading, Tabs, TabPanel } from '@contentful/f36-components';
 
-const ROOT = document.getElementById('root');
+const root = createRoot(document.getElementById('root'));
+const queryClient = new QueryClient();
+
+const renderApp = (element) =>
+  root.render(
+    <QueryClientProvider client={queryClient}>{element}</QueryClientProvider>
+  );
 
 init((sdk) => {
   if (sdk.location.is(locations.LOCATION_APP_CONFIG)) {
-    return render(<Config sdk={sdk} />, ROOT);
+    return renderApp(<Config sdk={sdk} />);
   }
 
   if (sdk.location.is(locations.LOCATION_ENTRY_FIELD)) {
     sdk.window.startAutoResizer();
 
     if (sdk.field.type === 'Text') {
-      return render(<SJMarkdown sdk={sdk} />, ROOT);
+      return renderApp(<SJMarkdown sdk={sdk} />);
     } else if (sdk.field.type === 'RichText') {
-      return render(<SJRichtext sdk={sdk} />, ROOT);
+      return renderApp(<SJRichtext sdk={sdk} />);
     } else if (sdk.field.type === 'Link') {
-      return render(<LinkPreview sdk={sdk} />, ROOT);
+      return renderApp(<LinkPreview sdk={sdk} />);
     }
   }
 
   if (sdk.location.is(locations.LOCATION_PAGE)) {
-    return render(<div>hello world</div>, ROOT);
+    return renderApp(<div>hello world</div>);
   }
 
   if (sdk.location.is(locations.LOCATION_DIALOG)) {
-    Component = renderMarkdownDialog(sdk);
+    return renderApp(renderMarkdownDialog(sdk));
   }
 });
 
@@ -56,10 +52,9 @@ class Config extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      parameters: { forbiddenWords: [] },
+      parameters: {},
       contentTypes: [],
       selectedAppFields: [],
-      validFieldsForMarkdownValidation: [],
       currentTabId: 'long',
     };
     this.app = this.props.sdk.app;
@@ -170,33 +165,29 @@ class Config extends Component {
 
     return (
       <div style={{ maxWidth: '800px', margin: '0 auto', padding: '1em' }}>
-        <Heading element="h1">Custom field editors</Heading>
-        <Tabs withDivider>
-          {this.TABS_CONFIG.map(({ id, label }) => (
-            <Tab
-              id={id}
-              key={id}
-              selected={this.state.currentTabId === id}
-              onSelect={(id) => this.setState({ currentTabId: id })}
-            >
-              {label}
-            </Tab>
+        <Heading as="h1">Custom field editors</Heading>
+        <Tabs
+          currentTab={this.state.currentTabId}
+          onTabChange={(id) => this.setState({ currentTabId: id })}
+        >
+          <Tabs.List variant="horizontal-divider">
+            {this.TABS_CONFIG.map(({ id, label }) => (
+              <Tabs.Tab key={id} panelId={id}>
+                {label}
+              </Tabs.Tab>
+            ))}
+          </Tabs.List>
+
+          {this.TABS_CONFIG.map(({ id, fieldTypes, Component }) => (
+            <TabPanel id={id} key={id}>
+              <Component
+                parameters={this.state.parameters}
+                setParameter={this.setParameter}
+                FieldSelect={getFieldSelect({ fieldTypes })}
+              />
+            </TabPanel>
           ))}
         </Tabs>
-
-        {this.TABS_CONFIG.map(({ id, fieldTypes, Component }) => (
-          <TabPanel
-            id={id}
-            key={id}
-            hidden={this.state.currentTabId === id ? '' : 'hidden'}
-          >
-            <Component
-              parameters={this.state.parameters}
-              setParameter={this.setParameter}
-              FieldSelect={getFieldSelect({ fieldTypes })}
-            />
-          </TabPanel>
-        ))}
       </div>
     );
   }

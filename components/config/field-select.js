@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckboxField } from '@contentful/forma-36-react-components';
+import { Checkbox } from '@contentful/f36-components';
 
 function getFieldsOfType(contentTypes, { fieldTypes, selectedAppFields }) {
   const isSelected = (field) =>
@@ -38,15 +38,16 @@ function FieldSelect({
     <ul>
       {fields.map((field) => (
         <li key={`${field.id}-${field.contentType.sys.id}`}>
-          <CheckboxField
-            labelText={`${field.name} in ${field.contentType.name} (${field.type})`}
+          <Checkbox
+            id={`${field.name}-${field.contentType.sys.id}`}
             name={`${field.name}-${field.contentType.sys.id}`}
-            checked={field.isSelected}
+            isChecked={field.isSelected}
             onChange={() =>
               onFieldChange(field, { isSelected: !field.isSelected })
             }
-            id={`${field.name}-${field.contentType.sys.id}`}
-          />
+          >
+            {`${field.name} in ${field.contentType.name} (${field.type})`}
+          </Checkbox>
         </li>
       ))}
     </ul>

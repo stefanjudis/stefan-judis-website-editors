@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { SingleMediaEditor } from '@contentful/field-editor-reference';
-import { Button, Pill } from '@contentful/forma-36-react-components';
+import { Button, Pill } from '@contentful/f36-components';
 
 function SJSingleMediaEditor({ sdk }) {
   const [asset, setAsset] = useState(null);
@@ -25,10 +25,11 @@ function SJSingleMediaEditor({ sdk }) {
     return (
       <SingleMediaEditor
         sdk={sdk}
+        viewType="card"
         parameters={{
           instance: {
-            canCreateEntity: true,
-            canLinkEntity: true,
+            showCreateEntityAction: true,
+            showLinkEntityAction: true,
           },
         }}
       />
@@ -44,7 +45,7 @@ function SJSingleMediaEditor({ sdk }) {
         <Pill label={contentType} />
         <Button
           size="small"
-          buttonType="primary"
+          variant="primary"
           onClick={() =>
             sdk.navigator.openAsset(asset.sys.id, { slideIn: true })
           }
@@ -56,7 +57,7 @@ function SJSingleMediaEditor({ sdk }) {
         </Button>
         <Button
           size="small"
-          buttonType="warning"
+          variant="negative"
           onClick={() => sdk.field.setValue(null)}
           style={{
             marginLeft: '0.5em',

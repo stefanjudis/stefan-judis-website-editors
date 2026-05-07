@@ -2,34 +2,33 @@
   "name": "stefan-judis-website-editors",
   "version": "1.0.0",
   "description": "",
-  "main": "src/app.js",
+  "source": "index.html",
   "scripts": {
-    "start": "parcel -p 8080 watch index.html ",
-    "build": "parcel build index.html "
+    "start": "parcel index.html --port 8080",
+    "build": "parcel build index.html"
   },
   "keywords": [],
   "author": "stefan judis <stefanjudis@gmail.com>",
   "license": "MIT",
   "browserslist": "> 5%",
+  "@parcel/resolver-default": {
+    "packageExports": true
+  },
   "dependencies": {
-    "@contentful/field-editor-markdown": "^0.7.1",
-    "@contentful/field-editor-reference": "^0.9.6",
-    "@contentful/field-editor-rich-text": "^0.10.7",
-    "@contentful/forma-36-fcss": "0.0.35",
-    "@contentful/forma-36-react-components": "3.37.3",
-    "@contentful/forma-36-tokens": "0.5.2",
-    "alex": "^8.1.1",
-    "contentful-ui-extensions-sdk": "^3.14.3",
-    "lodash.debounce": "^4.0.8",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
-    "showdown": "^1.9.1"
+    "@contentful/app-sdk": "^4.56.0",
+    "@contentful/f36-components": "^6.8.0",
+    "@contentful/f36-tokens": "^6.1.2",
+    "@contentful/field-editor-markdown": "^2.1.6",
+    "@contentful/field-editor-reference": "^8.2.4",
+    "@contentful/field-editor-rich-text": "^6.3.4",
+    "@lingui/core": "^5.9.5",
+    "@tanstack/react-query": "^5.100.9",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.9.6",
-    "@babel/plugin-transform-runtime": "^7.9.6",
-    "@babel/preset-env": "^7.9.6",
-    "@babel/preset-react": "^7.9.4",
-    "parcel-bundler": "^1.12.4"
+    "buffer": "^6.0.3",
+    "parcel": "^2.16.4",
+    "process": "^0.11.10"
   }
 }
