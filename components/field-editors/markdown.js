@@ -2,12 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { MarkdownEditor } from '@contentful/field-editor-markdown';
 import { Button } from '@contentful/f36-components';
 import 'codemirror/lib/codemirror.css';
+import { suppressFieldEcho } from './suppress-field-echo';
 
 const TEMPLATE_URL = 'https://www.stefanjudis.com/web-weekly/template.txt';
 
 function SJMarkdown({ sdk }) {
   const [isEmpty, setIsEmpty] = useState(!sdk.field.getValue());
   const [isLoading, setIsLoading] = useState(false);
+  const [markdownSdk] = useState(() => ({
+    ...sdk,
+    field: suppressFieldEcho(sdk.field),
+  }));
 
   useEffect(() => {
     return sdk.field.onValueChanged((value) => setIsEmpty(!value));
@@ -53,7 +58,7 @@ function SJMarkdown({ sdk }) {
           </Button>
         </div>
       )}
-      <MarkdownEditor sdk={sdk} isInitiallyDisabled={false} />
+      <MarkdownEditor sdk={markdownSdk} isInitiallyDisabled={false} />
     </div>
   );
 }
