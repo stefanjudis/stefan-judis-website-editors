@@ -4,7 +4,7 @@ import { Button } from '@contentful/f36-components';
 import 'codemirror/lib/codemirror.css';
 import { suppressFieldEcho } from './suppress-field-echo';
 
-const TEMPLATE_URL = 'https://www.stefanjudis.com/web-weekly/template.txt';
+const TEMPLATE_URL = 'https://webweekly.email/newsletter-template.txt';
 
 function SJMarkdown({ sdk }) {
   const [isEmpty, setIsEmpty] = useState(!sdk.field.getValue());
